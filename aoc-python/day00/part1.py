@@ -36,6 +36,8 @@ INPUT_TXT = Path(__file__).parent / 'input.txt'
 
 
 def main() -> int:
+    print(compute(INPUT_S))
+
     with open(INPUT_TXT) as f, support.timing():
         print(compute(f.read()))
 
