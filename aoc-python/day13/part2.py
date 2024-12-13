@@ -1,5 +1,5 @@
-import heapq
 import re
+from fractions import Fraction
 from pathlib import Path
 from typing import NamedTuple
 
@@ -9,12 +9,12 @@ import support
 
 
 class point(NamedTuple):
-    x: int
-    y: int
+    x: Fraction
+    y: Fraction
 
 
-def compute(s: str) -> int:
-    machines = []
+def compute(s: str) -> Fraction:
+    machines: list[tuple[dict[str, point], point]] = []
     for m in s.split("\n\n"):
         buttons = {}
         for line in m.splitlines():
@@ -22,15 +22,18 @@ def compute(s: str) -> int:
                 prize_x, prize_y = re.findall(r"X=(\d+), Y=(\d+)", line)[0]
             elif line.startswith("Button "):
                 button, x, y = re.findall(r"Button (A|B): X\+(\d+), Y\+(\d+)", line)[0]
-                buttons[button] = point(int(x), int(y))
+                buttons[button] = point(Fraction(x), Fraction(y))
         machines.append(
             (
                 buttons,
-                point(int(prize_x) + 10000000000000, int(prize_y) + 10000000000000),
+                point(
+                    Fraction(prize_x) + 10000000000000,
+                    Fraction(prize_y) + 10000000000000,
+                ),
             )
         )
 
-    costs = []
+    costs: list[Fraction] = []
     for buttons, prize in machines:
         # b = (Y - (Ay/Ax)X) * (Ax / (AxBy - AyBx))
         b = (prize.y - (buttons["A"].y / buttons["A"].x) * prize.x) * (
@@ -40,11 +43,8 @@ def compute(s: str) -> int:
         # a = (X - Bx) / Ax
         a = (prize.x - buttons["B"].x * b) / buttons["A"].x
 
-        def check_button(n: float) -> bool:
-            return abs(n - round(n)) < 0.001
-
-        if check_button(a) and check_button(b):
-            costs.append(3 * round(a) + round(b))
+        if a.denominator == 1 and b.denominator == 1:
+            costs.append(3 * a + b)
 
     return sum(costs)
 
